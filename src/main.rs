@@ -2,22 +2,18 @@ use std::env;
 use std::fs;
 use std::path::PathBuf;
 
-const EXPORT_USAGE: &str = "Usage: rename_tool export <directory_path> [output_csv]";
-const IMPORT_USAGE: &str = "Usage: rename_tool import <directory_path> <input_csv>";
-
 fn main() {
     let mut args = env::args().skip(1);
 
     let Some(command) = args.next() else {
-        eprintln!("{EXPORT_USAGE}");
-        eprintln!("{IMPORT_USAGE}");
+        print_usage();
         std::process::exit(1);
     };
 
     match command.as_str() {
         "export" => {
             let Some(directory_path) = args.next() else {
-                eprintln!("{EXPORT_USAGE}");
+                print_usage();
                 std::process::exit(1);
             };
 
@@ -27,7 +23,7 @@ fn main() {
                 .unwrap_or_else(|| PathBuf::from("folders.csv"));
 
             if args.next().is_some() {
-                eprintln!("{EXPORT_USAGE}");
+                print_usage();
                 std::process::exit(1);
             }
 
@@ -35,25 +31,24 @@ fn main() {
         }
         "import" => {
             let Some(directory_path) = args.next() else {
-                eprintln!("{IMPORT_USAGE}");
+                print_usage();
                 std::process::exit(1);
             };
 
             let Some(input_csv) = args.next() else {
-                eprintln!("{IMPORT_USAGE}");
+                print_usage();
                 std::process::exit(1);
             };
 
             if args.next().is_some() {
-                eprintln!("{IMPORT_USAGE}");
+                print_usage();
                 std::process::exit(1);
             }
 
             import(PathBuf::from(directory_path), PathBuf::from(input_csv));
         }
         _ => {
-            eprintln!("{EXPORT_USAGE}");
-            eprintln!("{IMPORT_USAGE}");
+            print_usage();
             std::process::exit(1);
         }
     }
@@ -89,7 +84,7 @@ fn export(directory_path: PathBuf, output_csv_path: PathBuf) {
         }
     };
 
-    if let Err(error) = writer.write_record(["old_name"]) {
+    if let Err(error) = writer.write_record(["old_name", "new_name"]) {
         eprintln!(
             "Failed to write CSV header {}: {error}",
             output_csv_path.display()
@@ -105,7 +100,7 @@ fn export(directory_path: PathBuf, output_csv_path: PathBuf) {
             };
 
             let folder_name = folder_name_os.to_string_lossy();
-            if let Err(error) = writer.write_record([folder_name.as_ref()]) {
+            if let Err(error) = writer.write_record([folder_name.as_ref(), ""]) {
                 eprintln!(
                     "Failed to write CSV row {}: {error}",
                     output_csv_path.display()
@@ -229,4 +224,20 @@ fn resolve_path(path: PathBuf) -> PathBuf {
             }
         }
     }
+}
+
+fn print_usage() {
+    eprintln!(
+        "There are 3 commands, use export to generate a CSV of the current folder names, and import to rename folders based on a CSV.\n\
+The intermediate CSV file should have 2 columns: old_name,new_name\n\
+\n\
+rename_tool export <directory_path> [output_csv]\n\
+ - Exports the folder names to a CSV file. If output_csv is not provided, it defaults to folders.csv in the current directory.\n\
+\n\
+rename_tool import <directory_path> <input_csv>\n\
+ - Imports the folder names from a CSV file and renames the folders accordingly.\n\
+\n\
+rename_tool help\n\
+ - Displays this help message."
+    );
 }
