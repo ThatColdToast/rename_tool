@@ -17,7 +17,7 @@ fn main() {
                 std::process::exit(1);
             };
 
-            let output_csv_path = args
+            let output_csv = args
                 .next()
                 .map(PathBuf::from)
                 .unwrap_or_else(|| PathBuf::from("folders.csv"));
@@ -27,7 +27,7 @@ fn main() {
                 std::process::exit(1);
             }
 
-            export(PathBuf::from(directory_path), output_csv_path);
+            export(PathBuf::from(directory_path), output_csv);
         }
         "import" => {
             let Some(directory_path) = args.next() else {
@@ -35,17 +35,17 @@ fn main() {
                 std::process::exit(1);
             };
 
-            let Some(input_csv) = args.next() else {
-                print_usage();
-                std::process::exit(1);
-            };
+            let input_csv = args
+                .next()
+                .map(PathBuf::from)
+                .unwrap_or_else(|| PathBuf::from("folders.csv"));
 
             if args.next().is_some() {
                 print_usage();
                 std::process::exit(1);
             }
 
-            import(PathBuf::from(directory_path), PathBuf::from(input_csv));
+            import(PathBuf::from(directory_path), input_csv);
         }
         _ => {
             print_usage();
@@ -234,8 +234,8 @@ The intermediate CSV file should have 2 columns: old_name,new_name\n\
 rename_tool export <directory_path> [output_csv]\n\
  - Exports the folder names to a CSV file. If output_csv is not provided, it defaults to folders.csv in the current directory.\n\
 \n\
-rename_tool import <directory_path> <input_csv>\n\
- - Imports the folder names from a CSV file and renames the folders accordingly.\n\
+rename_tool import <directory_path> [input_csv]\n\
+ - Imports the folder names from a CSV file and renames the folders accordingly. If input_csv is not provided, it defaults to folders.csv in the current directory.\n\
 \n\
 rename_tool help\n\
  - Displays this help message."
